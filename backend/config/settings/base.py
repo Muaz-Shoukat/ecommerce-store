@@ -67,7 +67,7 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 # PostgreSQL via DATABASE_URL (section 8)
-_db_url = urlparse(config("DATABASE_URL", default="postgres://user:pass@localhost:5432/stationery_db"))
+_db_url = urlparse(config("DATABASE_URL"))
 
 DATABASES = {
     "default": {
