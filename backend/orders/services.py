@@ -21,6 +21,7 @@ def create_order(
     guest_name: str = "",
     guest_phone: str = "",
     guest_address: str = "",
+    guest_email: str = "",
 ) -> Order:
     """
     Validate stock, price lines from the DB, and create Order + OrderItems.
@@ -96,6 +97,7 @@ def create_order(
         guest_name=guest_name if user is None else "",
         guest_phone=guest_phone if user is None else "",
         guest_address=guest_address if user is None else "",
+        guest_email=guest_email if user is None else (guest_email or ""),
         payment_method=payment_method,
         total_amount=total,
         status="pending",
@@ -128,3 +130,28 @@ def create_order(
         .prefetch_related("items__product", "items__variant")
         .get(pk=order.pk)
     )
+
+
+@transaction.atomic
+def cancel_order_and_restock(order: Order) -> Order:
+    """Cancel a pending order and return reserved stock (used when Stripe start fails)."""
+    order = (
+        Order.objects.select_for_update()
+        .prefetch_related("items__product", "items__variant")
+        .get(pk=order.pk)
+    )
+    if order.status == "cancelled":
+        return order
+
+    if order.status == "pending":
+        for item in order.items.all():
+            quantity = item.quantity
+            if item.variant_id:
+                ProductVariant.objects.filter(pk=item.variant_id).update(
+                    stock=F("stock") + quantity
+                )
+            elif item.product_id:
+                Product.objects.filter(pk=item.product_id).update(stock=F("stock") + quantity)
+        order.status = "cancelled"
+        order.save(update_fields=["status", "updated_at"])
+    return order

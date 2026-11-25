@@ -17,6 +17,7 @@ class Order(models.Model):
         ("jazzcash", "JazzCash"),
         ("easypaisa", "Easypaisa"),
         ("cod", "Cash on Delivery"),
+        ("stripe", "Card (Stripe)"),
     ]
 
     user = models.ForeignKey(
@@ -31,12 +32,19 @@ class Order(models.Model):
     guest_name = models.CharField(max_length=150, blank=True)
     guest_phone = models.CharField(max_length=20, blank=True)
     guest_address = models.TextField(blank=True)
+    guest_email = models.EmailField(blank=True)
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    stripe_checkout_session_id = models.CharField(max_length=255, blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def customer_email(self) -> str:
+        if self.user_id and getattr(self.user, "email", None):
+            return (self.user.email or "").strip()
+        return (self.guest_email or "").strip()
 
     class Meta:
         ordering = ["-created_at"]

@@ -1,0 +1,15 @@
+{% extends "admin/change_form.html" %}
+
+{% block submit_buttons_bottom %}
+{% if original and has_change_permission %}
+<div class="submit-row">
+    <input
+        type="submit"
+        value="Generate AI description"
+        name="_generate_ai_description"
+        class="button"
+    />
+</div>
+{% endif %}
+{{ block.super }}
+{% endblock %}

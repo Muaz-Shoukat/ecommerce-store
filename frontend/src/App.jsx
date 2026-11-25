@@ -11,6 +11,7 @@ import OrderConfirmation from './pages/OrderConfirmation';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import MyOrders from './pages/MyOrders';
+import ChatWidget from './components/ChatWidget';
 
 export default function App() {
   return (
@@ -37,6 +38,7 @@ export default function App() {
         </Routes>
       </main>
       <Footer />
+      <ChatWidget />
     </div>
   );
 }

@@ -1,7 +1,8 @@
+from rest_framework import status
 from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework.views import APIView
 
 from common.pagination import StandardResultsSetPagination
 
@@ -12,7 +13,13 @@ from .serializers import (
     ProductReviewSerializer,
     ProductSerializer,
 )
-from .services import annotate_product_stats, filter_products, user_can_review, user_has_reviewed
+from .services import (
+    annotate_product_stats,
+    filter_products,
+    get_product_suggestions,
+    user_can_review,
+    user_has_reviewed,
+)
 
 
 class CategoryListView(ListAPIView):
@@ -37,6 +44,27 @@ class ProductListView(ListAPIView):
             category=self.request.query_params.get("category"),
             search=self.request.query_params.get("search"),
         )
+
+
+class ProductSuggestionsView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, slug):
+        try:
+            product = Product.objects.get(slug=slug, is_active=True)
+        except Product.DoesNotExist:
+            return Response({"detail": "Product not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        raw_limit = request.query_params.get("limit", "4")
+        try:
+            limit = int(raw_limit)
+        except (TypeError, ValueError):
+            limit = 4
+        limit = min(max(1, limit), 12)
+
+        suggestions = get_product_suggestions(product, limit=limit)
+        serializer = ProductSerializer(suggestions, many=True, context={"request": request})
+        return Response(serializer.data)
 
 
 class ProductDetailView(RetrieveAPIView):

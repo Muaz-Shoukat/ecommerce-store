@@ -1,7 +1,11 @@
 import { Minus, Plus, ShieldCheck, Truck } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getProductBySlug, getProductReviews, getProducts } from '../api/productsApi';
+import {
+  getProductBySlug,
+  getProductReviews,
+  getProductSuggestions,
+} from '../api/productsApi';
 import ProductCard from '../components/ProductCard';
 import ProductReviewForm, {
   ProductReviewList,
@@ -42,13 +46,11 @@ export default function ProductDetail() {
     refetch: refetchProduct,
   } = useAsync(() => getProductBySlug(slug), [slug, isAuthenticated]);
   const categorySlug = product?.category?.slug;
-  const { data: relatedData, loading: relatedLoading } = useAsync(
-    () =>
-      categorySlug
-        ? getProducts({ category: categorySlug, page_size: 4 })
-        : Promise.resolve({ results: [] }),
-    [categorySlug],
-  );
+  const {
+    data: suggestionsData,
+    loading: relatedLoading,
+    error: suggestionsError,
+  } = useAsync(() => getProductSuggestions(slug, { limit: 4 }), [slug]);
   const {
     data: reviewsData,
     loading: reviewsLoading,
@@ -71,7 +73,11 @@ export default function ProductDetail() {
   const discount = product ? getDiscountPercent(product) : 0;
   const stockSource = activeVariant ?? product;
   const stock = getStockStatus(stockSource?.stock);
-  const related = (relatedData?.results ?? []).filter((item) => item.slug !== slug);
+  const related = (
+    Array.isArray(suggestionsData)
+      ? suggestionsData
+      : suggestionsData?.results ?? []
+  ).filter((item) => item.slug !== slug);
   const reviews = localReviews ?? reviewsData?.results ?? [];
   const averageRating = Number(product?.average_rating) || 0;
   const reviewCount = Number(product?.review_count) || 0;
@@ -311,14 +317,20 @@ export default function ProductDetail() {
         <SectionHeader
           eyebrow="Related"
           title="You may also like"
-          description="More items from the same category."
+          description="Based on purchases and similar items."
           actionLabel="View category"
           actionTo={
             categorySlug ? `/products?category=${categorySlug}` : '/products'
           }
         />
         {relatedLoading && <LoadingSkeleton lines={4} />}
-        {!relatedLoading && related.length === 0 && (
+        {!relatedLoading && suggestionsError && (
+          <Alert tone="error" title="Could not load suggestions">
+            We could not fetch product suggestions. Try again later or browse the
+            catalog.
+          </Alert>
+        )}
+        {!relatedLoading && !suggestionsError && related.length === 0 && (
           <Alert tone="info" title="No related products">
             Try browsing the full catalog instead.
           </Alert>
