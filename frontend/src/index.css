@@ -1,0 +1,164 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Plus Jakarta Sans", system-ui, sans-serif;
+
+  --color-primary-50: #eefbf8;
+  --color-primary-100: #d5f5ed;
+  --color-primary-200: #aeebdb;
+  --color-primary-300: #79dcc4;
+  --color-primary-400: #44c4a7;
+  --color-primary-500: #28a88c;
+  --color-primary-600: #1d8772;
+  --color-primary-700: #1a6c5d;
+  --color-primary-800: #19574c;
+  --color-primary-900: #184840;
+  --color-primary-950: #0b2924;
+
+  --color-accent-50: #fff4ed;
+  --color-accent-100: #ffe6d5;
+  --color-accent-200: #feccaa;
+  --color-accent-300: #fdab74;
+  --color-accent-400: #fb8a3c;
+  --color-accent-500: #f97316;
+  --color-accent-600: #ea580c;
+  --color-accent-700: #c2410c;
+
+  --color-neutral-50: #f6f7f9;
+  --color-neutral-100: #eceef2;
+  --color-neutral-200: #d5dae2;
+  --color-neutral-300: #b0b9c8;
+  --color-neutral-400: #8593a8;
+  --color-neutral-500: #66768d;
+  --color-neutral-600: #515f74;
+  --color-neutral-700: #434d5f;
+  --color-neutral-800: #3a4250;
+  --color-neutral-900: #343a45;
+  --color-neutral-950: #22262e;
+
+  --color-surface: #f3f5f8;
+  --color-surface-elevated: #ffffff;
+  --color-success: #16a34a;
+  --color-error: #dc2626;
+  --color-warning: #d97706;
+  --color-info: #0284c8;
+
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+
+  --shadow-card: 0 10px 30px -12px rgba(34, 38, 46, 0.18);
+  --shadow-lift: 0 18px 40px -16px rgba(29, 135, 114, 0.28);
+
+  --spacing-1: 8px;
+  --spacing-2: 16px;
+  --spacing-3: 24px;
+  --spacing-4: 32px;
+  --spacing-5: 40px;
+  --spacing-6: 48px;
+  --spacing-8: 64px;
+  --spacing-10: 80px;
+  --spacing-12: 96px;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    overflow-x: hidden;
+    font-family: var(--font-body);
+    color: var(--color-neutral-900);
+    background:
+      radial-gradient(circle at top left, rgba(40, 168, 140, 0.08), transparent 32%),
+      radial-gradient(circle at top right, rgba(249, 115, 22, 0.06), transparent 28%),
+      var(--color-surface);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  .font-body {
+    font-family: var(--font-body);
+  }
+
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+
+  .shadow-lift {
+    box-shadow: var(--shadow-lift);
+  }
+
+  .hover-lift {
+    transition:
+      transform 250ms ease,
+      box-shadow 250ms ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lift);
+  }
+}
+
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  70% {
+    transform: scale(1.08);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
