@@ -16,6 +16,21 @@ class OrderCreateSerializer(serializers.Serializer):
     guest_name = serializers.CharField(required=False, allow_blank=True, default="")
     guest_phone = serializers.CharField(required=False, allow_blank=True, default="")
     guest_address = serializers.CharField(required=False, allow_blank=True, default="")
+    guest_email = serializers.EmailField(required=False, allow_blank=True, default="")
+
+    def validate(self, attrs):
+        request = self.context["request"]
+        user = request.user if request.user.is_authenticated else None
+        payment_method = attrs.get("payment_method")
+        email = (attrs.get("guest_email") or "").strip()
+        if user is not None:
+            email = email or (getattr(user, "email", "") or "").strip()
+        if payment_method == "stripe" and not email:
+            raise serializers.ValidationError(
+                {"guest_email": "Email is required for card payments."}
+            )
+        attrs["guest_email"] = email
+        return attrs
 
     def create(self, validated_data):
         request = self.context["request"]
@@ -28,6 +43,7 @@ class OrderCreateSerializer(serializers.Serializer):
                 guest_name=validated_data.get("guest_name", ""),
                 guest_phone=validated_data.get("guest_phone", ""),
                 guest_address=validated_data.get("guest_address", ""),
+                guest_email=validated_data.get("guest_email", ""),
             )
         except OrderServiceError as exc:
             raise serializers.ValidationError({"detail": str(exc)}) from exc
@@ -68,9 +84,11 @@ class OrderSerializer(serializers.ModelSerializer):
             "guest_name",
             "guest_phone",
             "guest_address",
+            "guest_email",
             "status",
             "payment_method",
             "total_amount",
+            "stripe_checkout_session_id",
             "items",
             "created_at",
             "updated_at",

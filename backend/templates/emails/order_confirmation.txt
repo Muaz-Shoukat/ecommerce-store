@@ -1,0 +1,29 @@
+Stationery Store — Order {% if order.status == "confirmed" %}confirmed{% else %}received{% endif %}
+
+Hi{% if customer_name %} {{ customer_name }}{% endif %},
+
+Thanks for your order. Here are the details:
+
+Order #: {{ order.id }}
+Status:  {{ order.get_status_display }}
+Payment: {{ order.get_payment_method_display }}
+Placed:  {{ order.created_at|date:"M j, Y · g:i A" }}
+Total:   PKR {{ order.total_amount }}
+{% if shipping_address %}
+Ship to:
+{{ shipping_address }}
+{% endif %}
+Items
+-----
+{% for line in lines %}
+- {{ line.name }}{% if line.variant %} ({{ line.variant }}){% endif %} × {{ line.quantity }} — PKR {{ line.line_total }}
+{% endfor %}
+
+Order total: PKR {{ order.total_amount }}
+
+We'll email you again when your order ships.
+{% if shop_url %}
+Shop again: {{ shop_url }}
+{% endif %}
+
+— Stationery Store

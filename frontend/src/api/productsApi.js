@@ -8,6 +8,12 @@ export function getProductBySlug(slug) {
   return axiosClient.get(`products/${slug}/`).then((res) => res.data);
 }
 
+export function getProductSuggestions(slug, params = {}) {
+  return axiosClient
+    .get(`products/${slug}/suggestions/`, { params })
+    .then((res) => res.data);
+}
+
 export function getCategories() {
   return axiosClient.get('categories/').then((res) => res.data);
 }

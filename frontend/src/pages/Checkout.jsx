@@ -34,15 +34,9 @@ const EMPTY_ADDRESS = {
 
 const PAYMENT_METHODS = [
   {
-    value: 'jazzcash',
-    label: 'JazzCash',
-    description: 'Pay with JazzCash wallet',
-    icon: Smartphone,
-  },
-  {
-    value: 'easypaisa',
-    label: 'Easypaisa',
-    description: 'Pay with Easypaisa wallet',
+    value: 'stripe',
+    label: 'Card (Stripe)',
+    description: 'Pay securely with card — Stripe test mode',
     icon: CreditCard,
   },
   {
@@ -50,6 +44,18 @@ const PAYMENT_METHODS = [
     label: 'Cash on Delivery',
     description: 'Pay when your order arrives',
     icon: Banknote,
+  },
+  {
+    value: 'jazzcash',
+    label: 'JazzCash',
+    description: 'Pay with JazzCash wallet (coming soon)',
+    icon: Smartphone,
+  },
+  {
+    value: 'easypaisa',
+    label: 'Easypaisa',
+    description: 'Pay with Easypaisa wallet (coming soon)',
+    icon: CreditCard,
   },
 ];
 
@@ -80,7 +86,8 @@ export default function Checkout() {
   const [createAccount, setCreateAccount] = useState(false);
   const [accountUsername, setAccountUsername] = useState('');
   const [accountPassword, setAccountPassword] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('cod');
+  const [paymentMethod, setPaymentMethod] = useState('stripe');
+  const [guestEmail, setGuestEmail] = useState('');
   const [loadingAddress, setLoadingAddress] = useState(false);
   const [addressError, setAddressError] = useState('');
   const [formError, setFormError] = useState('');
@@ -153,10 +160,21 @@ export default function Checkout() {
         setFormError('Please provide your name and phone number.');
         return false;
       }
+      if (!guestEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail.trim())) {
+        setFormError('Please provide a valid email for order updates.');
+        return false;
+      }
       if (createAccount && (!accountUsername.trim() || !accountPassword)) {
         setFormError('Enter a username and password to create an account.');
         return false;
       }
+    } else if (
+      paymentMethod === 'stripe' &&
+      guestEmail.trim() &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail.trim())
+    ) {
+      setFormError('Please provide a valid email for card payments.');
+      return false;
     }
     setFormError('');
     return true;
@@ -205,9 +223,17 @@ export default function Checkout() {
         payload.guest_name = guestName.trim();
         payload.guest_phone = guestPhone.trim();
         payload.guest_address = formatGuestAddress(address);
+        payload.guest_email = guestEmail.trim();
+      } else if (guestEmail.trim()) {
+        payload.guest_email = guestEmail.trim();
       }
 
       const order = await createOrder(payload);
+      if (order.checkout_url) {
+        clearCart();
+        window.location.href = order.checkout_url;
+        return;
+      }
       clearCart();
       navigate('/order-confirmation', { state: { order } });
     } catch (err) {
@@ -328,6 +354,17 @@ export default function Checkout() {
                       />
                     </label>
                   </div>
+                  <label className="grid gap-1.5 text-sm font-medium">
+                    Email
+                    <input
+                      type="email"
+                      value={guestEmail}
+                      onChange={(e) => setGuestEmail(e.target.value)}
+                      className={fieldClass}
+                      required
+                      autoComplete="email"
+                    />
+                  </label>
                   <AddressForm
                     value={address}
                     onChange={setAddress}
@@ -401,8 +438,22 @@ export default function Checkout() {
                   );
                 })}
               </div>
+              {isAuthenticated && paymentMethod === 'stripe' && (
+                <label className="grid gap-1.5 text-sm font-medium">
+                  Receipt email (optional if already on your account)
+                  <input
+                    type="email"
+                    value={guestEmail}
+                    onChange={(e) => setGuestEmail(e.target.value)}
+                    className={fieldClass}
+                    placeholder="you@example.com"
+                    autoComplete="email"
+                  />
+                </label>
+              )}
               <p className="text-sm text-neutral-500">
-                COD places the order now. JazzCash / Easypaisa initiation comes later.
+                Card payments open Stripe Checkout. COD confirms immediately and emails
+                when SMTP is configured. JazzCash / Easypaisa are placeholders.
               </p>
             </Card>
           )}
@@ -446,7 +497,11 @@ export default function Checkout() {
                 disabled={submitting}
                 onClick={placeOrder}
               >
-                {submitting ? 'Placing order…' : 'Place order'}
+                {submitting
+                  ? 'Placing order…'
+                  : paymentMethod === 'stripe'
+                    ? 'Pay with Stripe'
+                    : 'Place order'}
               </PrimaryButton>
             )}
             <Link to="/cart" className="no-underline">
