@@ -40,33 +40,62 @@ ecommerce-store/
 
 ## Prerequisites
 
-- Python 3.12+ and [uv](https://docs.astral.sh/uv/getting-started/installation/)
+- Python 3.12+
+- [uv](https://docs.astral.sh/uv/getting-started/installation/)
 - PostgreSQL 14+
-- Node.js 18+ and npm
+- Node.js 18+ and npm (frontend)
 
 ## Backend Setup
 
-```bash
-cd backend
+### 1. Clone the repo and open the backend
 
-# 1. Create a virtual environment and install dependencies
+```bash
+git clone <repo-url>
+cd ecommerce-store/backend
+```
+
+### 2. Create the virtual environment and install dependencies
+
+```bash
 uv venv
 uv pip install -r requirements.txt
+```
 
-# 2. Configure environment variables
-cp .env.example .env        # then edit .env (see below)
+### 3. Configure environment variables
 
-# 3. Create the database (in psql)
-#    CREATE USER ecommerce_user WITH PASSWORD 'admin';
-#    CREATE DATABASE ecommerce_store OWNER ecommerce_user;
+```bash
+cp .env.example .env   # then edit .env (see Environment Variables below)
+```
 
-# 4. Run migrations
+### 4. Create the database (in psql)
+
+```sql
+CREATE USER ecommerce_user WITH PASSWORD 'admin';
+CREATE DATABASE ecommerce_store OWNER ecommerce_user;
+```
+
+### 5. Run migrations
+
+```bash
 uv run python manage.py migrate
+```
 
-# 5. Create an admin user
+### 6. (Optional) Seed sample products
+
+```bash
+uv run python manage.py seed_products           # idempotent
+uv run python manage.py seed_products --clear   # wipe and reseed
+```
+
+### 7. Create an admin user
+
+```bash
 uv run python manage.py createsuperuser
+```
 
-# 6. Start the API server
+### 8. Start the server
+
+```bash
 uv run python manage.py runserver
 ```
 
@@ -110,17 +139,6 @@ EASYPAISA_HASH_KEY=
 ```
 
 > `DATABASE_URL` must contain the URL only, with no second `DATABASE_URL=` prefix and no quotes. Never commit `.env`.
-
-### Seed Sample Data
-
-Place `seed_products.py` at `backend/products/management/commands/seed_products.py`, with empty `__init__.py` files in `management/` and `commands/`, then run:
-
-```bash
-uv run python manage.py seed_products           # idempotent
-uv run python manage.py seed_products --clear   # wipe and reseed
-```
-
-This creates sample categories, products and variants with placeholder images.
 
 ## Frontend Setup
 
@@ -234,7 +252,7 @@ stripe trigger checkout.session.completed
 Your `DATABASE_URL` value is malformed, usually a doubled `DATABASE_URL=` prefix in `.env`, or a stale `DATABASE_URL` set in your shell. Run `echo $DATABASE_URL` and `unset` it if needed.
 
 **`password authentication failed` / `database does not exist`**
-Create the PostgreSQL user and database as shown in step 3 of the backend setup.
+Create the PostgreSQL user and database as shown in step 4 of the backend setup.
 
 **Stripe order stays `pending` after paying**
 Open the confirmation URL with `session_id` so the confirm API runs, or start `stripe listen` with a matching `STRIPE_WEBHOOK_SECRET` and pay again. Stripe Dashboard webhooks never reach bare `localhost`.
